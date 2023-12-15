@@ -1,11 +1,15 @@
-FROM ubuntu
+FROM python:3.10.6
 
-ENV DEV false
+WORKDIR /app
 
-RUN apt-get update && apt-get install -y ucspi-tcp imagemagick
+COPY requirements.txt .
 
-EXPOSE 3000
+RUN pip install -r requirements.txt
 
-COPY . /app
+COPY . .
 
-CMD [ "/app/start.sh" ]
+EXPOSE 3228
+
+RUN mkdir static/shared
+
+CMD [ "python", "manage.py", "runserver", "0.0.0.0:3228" ]

@@ -1,0 +1,20 @@
+
+{% if encoded_string %}
+
+<img src="data:image/jpeg;base64, {{ encoded_string }}" alt="">
+
+<form _="on submit hide me" hx-post="/meme" hx-target="#gallery" hx-swap="none">
+    <input type="hidden" name="top_text" value="{{ top_text }}"/>
+    <input type="hidden" name="file" value="{{ file }}"/>
+    <input type="hidden" name="encoded_string" value="{{ encoded_string }}"/>
+    <input type="hidden" name="bottom_text" value="{{ bottom_text }}"/>
+    <input type="hidden" name="share" value="true"/>
+    <br><br>
+    <button>Share</button>
+</form>
+
+{% else %}
+
+<div style="color: red">Not found</div>
+
+{% endif %}
