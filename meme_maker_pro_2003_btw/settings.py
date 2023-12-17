@@ -25,6 +25,8 @@ SECRET_KEY = "django-insecure-s0wrwjjsm_rlof$lk-qcn%!cx61c7v850vb4r*2tfzjf5xe7*1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+debug_ctx = lambda _: {"debug": DEBUG}
+
 ALLOWED_HOSTS = []
 
 
@@ -53,16 +55,19 @@ MIDDLEWARE = [
 ROOT_URLCONF = "meme_maker_pro_2003_btw.urls"
 
 
-TEMPLATES = [{
-    "BACKEND": "django.template.backends.django.DjangoTemplates",
-    "DIRS": [BASE_DIR / "templates"],
-    "APP_DIRS": True,
-    "OPTIONS": {
-        "context_processors": [
-            "django.template.context_processors.request",
-        ]
-    },
-}]
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "meme_maker_pro_2003_btw.settings.debug_ctx",
+            ]
+        },
+    }
+]
 
 
 WSGI_APPLICATION = "meme_maker_pro_2003_btw.wsgi.application"
@@ -71,12 +76,7 @@ WSGI_APPLICATION = "meme_maker_pro_2003_btw.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        # "ENGINE": "django.db.backends.sqlite3",
-        # "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+DATABASES = {}
 
 
 # Password validation

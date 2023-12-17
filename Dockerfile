@@ -1,5 +1,7 @@
 FROM python:3.10.6
 
+VOLUME /meme_maker_pro_2003_btw
+
 WORKDIR /app
 
 COPY requirements.txt .

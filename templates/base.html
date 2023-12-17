@@ -10,14 +10,16 @@
 
   <meta name="htmx-config" content='{"historyCacheSize": 15}'>
 
-  <script src="{% static 'js/_hyperscript.min.js' %}" defer></script>
-  <script src="{% static 'js/htmx.min.js' %}" defer></script>
-  <script src="{% static 'js/debug.js' %}" defer></script>
-  <script src="{% static 'js/event-header.js' %}" defer></script>
-  <script src="{% static 'js/sse.js' %}" defer></script>
+  <script src="{% static 'js/_hyperscript.min.js' %}"></script>
+  <script src="{% static 'js/htmx.min.js' %}"></script>
+  <script src="{% static 'js/sse.js' %}"></script>
+  <script src="{% static 'js/event-header.js' %}"></script>
+  {% if debug %}
+  <script src="{% static 'js/debug.js' %}"></script>
+  {% endif %}
 </head>
 <html>
-	<body hx-ext="debug, event-header"  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+	<body hx-ext="{% if debug %}debug, {% endif %}event-header"  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 		<main id="main">
 			{% block content %}{% endblock %}
 		</main>
