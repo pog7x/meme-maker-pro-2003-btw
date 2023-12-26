@@ -1,7 +1,7 @@
 import base64
 import os
 import time
-from collections import deque
+
 from io import BytesIO
 from pathlib import Path
 
@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.views import View
 from PIL import Image, ImageDraw, ImageFont
 
-dq = deque()
+dq = []
 
 
 def image_list(from_folder: str):
@@ -21,7 +21,7 @@ def image_list(from_folder: str):
         if file.endswith(".png") or file.endswith(".jpg"):
             all_images.append(file)
 
-    return all_images
+    return sorted(all_images, reverse=True)
 
 
 def get_file_path(file, folder):

@@ -12,6 +12,6 @@ COPY . .
 
 EXPOSE 3228
 
-RUN mkdir static/shared
+RUN mkdir -p static/shared
 
 CMD [ "python", "manage.py", "runserver", "0.0.0.0:3228" ]
