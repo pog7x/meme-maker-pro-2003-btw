@@ -7,11 +7,11 @@ from pathlib import Path
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
+from django.core.cache import cache
 from django.shortcuts import render
 from django.views import View
+from django_htmx.http import trigger_client_event
 from PIL import Image, ImageDraw, ImageFont
-
-dq = []
 
 
 def image_list(from_folder: str):
@@ -45,7 +45,9 @@ class StreamView(View):
     @staticmethod
     def event_stream():
         while True:
-            yield dq.pop() if dq else ""
+            val = cache.get("my_key") or ""
+            cache.delete("my_key")
+            yield val
             time.sleep(1)
 
 
@@ -68,18 +70,23 @@ class MemeView(View):
         top_text = request.POST.get("top_text")
         bottom_text = request.POST.get("bottom_text")
         encoded_string = request.POST.get("encoded_string")
+        is_share = request.POST.get("share") == "true"
         ctx = {
             "top_text": top_text,
             "bottom_text": bottom_text,
             "file": file,
+            "encoded_string": encoded_string,
         }
 
-        if request.POST.get("share") == "true":
+        if is_share:
             file_name = f"{int(time.time())}.{file.split('.')[-1]}"
             with open(get_file_path(file_name, "/shared/"), "wb+") as f:
                 f.write(base64.b64decode(encoded_string))
-                dq.append(f'data: <img src="static/shared/{file_name}" alt="">\n\n')
-            return render(request, self.template_name, context=ctx)
+                cache.set("my_key", f'data: <img src="static/shared/{file_name}" alt="">\n\n', 30)
+            return trigger_client_event(
+                response=render(request, self.template_name, context=ctx),
+                name="new_picture",
+            )
 
         if file:
             buffered = BytesIO()

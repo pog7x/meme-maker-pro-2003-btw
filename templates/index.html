@@ -14,7 +14,7 @@
 	</center>
 
 	<center>
-		<form hx-post="/meme" hx-target="#meme" hx-trigger="submit, keyup delay:500ms">
+		<form hx-post="/meme" hx-target="#meme" hx-trigger="load, submit, keyup delay:500ms">
 			<table>
 				<tr>
 					<td>
@@ -53,8 +53,8 @@
 						<center>
 							<button
 								id="b1"
-								_="init repeat forever transition my width to 100px height to 50px over 1s 
-									transition my width to 50px hieght to 20px over 1s"
+								style="color: white; padding: 20px;"
+								_="init repeat forever transition my *background-color to 'red' over 1s then transition my *background-color to 'blue' over 1s"
 							>
 								Do it
 							</button>
