@@ -13,15 +13,18 @@ from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
 from django.shortcuts import render
 from django.views import View
 from django_htmx.http import trigger_client_event
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
+
+from meme_maker_pro_2003_btw.meme_text_renderer import MemeTextRenderer
 
 
 KEEPALIVE_INTERVAL_SECONDS = 15
 IMAGE_BASE_WIDTH = 300
-MEME_FONT_SIZE = 20
-TEXT_FILL_COLOR = (255, 255, 255)
-TEXT_STROKE_COLOR = (0, 0, 0)
-TEXT_STROKE_WIDTH = 2
+FORMAT_EXT = {
+    "png": "png",
+    "jpg": "jpeg",
+    "jpeg": "jpeg",
+}
 
 
 def image_list(from_folder: str) -> list[str]:
@@ -40,13 +43,6 @@ def image_list(from_folder: str) -> list[str]:
 def get_file_path(file: str, folder: str) -> str:
     """Build absolute path to a file inside the static directory."""
     return f"{settings.STATICFILES_DIRS[0]}{folder}{file}"
-
-
-FORMAT_EXT = {
-    "png": "png",
-    "jpg": "jpeg",
-    "jpeg": "jpeg",
-}
 
 
 class SSEBroker:
@@ -186,34 +182,16 @@ class MemeView(View):
             wpercent = IMAGE_BASE_WIDTH / float(pil_img.size[0])
             hsize = int(float(pil_img.size[1]) * wpercent)
             pil_img = pil_img.resize(
-                (IMAGE_BASE_WIDTH, hsize), Image.Resampling.LANCZOS
+                (IMAGE_BASE_WIDTH, hsize), Image.Resampling.LANCZOS,
             )
 
-            draw = ImageDraw.Draw(pil_img)
-            _, img_height = pil_img.size
-            font = ImageFont.truetype(
-                get_file_path("impact.ttf", "/fonts/"), MEME_FONT_SIZE
+            renderer = MemeTextRenderer(
+                pil_img, get_file_path("impact.ttf", "/fonts/"),
             )
-
             if top_text:
-                draw.text(
-                    xy=(50, 20),
-                    text=top_text,
-                    fill=TEXT_FILL_COLOR,
-                    font=font,
-                    stroke_fill=TEXT_STROKE_COLOR,
-                    stroke_width=TEXT_STROKE_WIDTH,
-                )
-
+                renderer.draw_top_text(top_text)
             if bottom_text:
-                draw.text(
-                    xy=(50, img_height - 60),
-                    text=bottom_text,
-                    fill=TEXT_FILL_COLOR,
-                    font=font,
-                    stroke_fill=TEXT_STROKE_COLOR,
-                    stroke_width=TEXT_STROKE_WIDTH,
-                )
+                renderer.draw_bottom_text(bottom_text)
 
             buffered = BytesIO()
             pil_img.save(buffered, format=FORMAT_EXT.get(file.split(".")[-1]))
