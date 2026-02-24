@@ -10,11 +10,15 @@
 		>
 			Meme Maker Pro 2003 - Enterprise Edition
 		</h1>
-		<h2>No Canadians, btw</h2>
 	</center>
 
 	<center>
-		<form hx-post="/meme" hx-target="#meme" hx-trigger="load, submit, keyup delay:500ms">
+		<form
+			hx-post="/meme"
+			hx-target="#meme"
+			hx-trigger="submit, keyup delay:500ms"
+			hx-encoding="multipart/form-data"
+		>
 			<table>
 				<tr>
 					<td>
@@ -38,11 +42,12 @@
 				<tr>
 					<td colspan="2">
 						<center>
-							<select name="file" _="on input b1.click()">
-								{% for img in image_list %}
-									<option value="{{ img }}">{{ img }}</option>
-								{% endfor %}
-							</select>
+							<input
+								type="file"
+								name="upload_file"
+								accept="image/png, image/jpeg, image/webp"
+								_="on change b1.click()"
+							/>
 							<br />
 							<br />
 						</center>

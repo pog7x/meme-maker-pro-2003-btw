@@ -1,8 +1,8 @@
-<img src="data:image/jpeg;base64, {{ encoded_string }}" alt="">
+<img src="data:image/{{ file_ext|default:'png' }};base64, {{ encoded_string }}" alt="">
 
-<form _="on submit hide me" hx-post="/meme">
+<form _="on submit hide me" hx-post="/meme" hx-encoding="multipart/form-data">
     <input type="hidden" name="top_text" value="{{ top_text }}"/>
-    <input type="hidden" name="file" value="{{ file }}"/>
+    <input type="hidden" name="file_ext" value="{{ file_ext|default:'png' }}"/>
     <input type="hidden" name="encoded_string" value="{{ encoded_string }}"/>
     <input type="hidden" name="bottom_text" value="{{ bottom_text }}"/>
     <input type="hidden" name="share" value="true"/>
