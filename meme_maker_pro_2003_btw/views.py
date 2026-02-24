@@ -6,7 +6,6 @@ import time
 import uuid
 
 from io import BytesIO
-from pathlib import Path
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
@@ -24,6 +23,7 @@ FORMAT_EXT = {
     "png": "png",
     "jpg": "jpeg",
     "jpeg": "jpeg",
+    "webp": "webp",
 }
 
 
@@ -31,11 +31,7 @@ def image_list(from_folder: str) -> list[str]:
     """Return sorted list of image filenames from the given static subfolder."""
     static_root = settings.STATICFILES_DIRS[0]
     return sorted(
-        [
-            f
-            for f in os.listdir(f"{static_root}{from_folder}")
-            if f.endswith((".png", ".jpg"))
-        ],
+        [f for f in os.listdir(f"{static_root}{from_folder}") if f.endswith(tuple(FORMAT_EXT.keys()))],
         reverse=True,
     )
 
@@ -134,7 +130,6 @@ class IndexView(View):
 
     def get(self, request: HttpRequest) -> HttpResponse:
         ctx = {
-            "image_list": image_list("/img"),
             "shared_image_list": image_list("/shared"),
         }
         return render(request, self.template_name, context=ctx)
@@ -144,20 +139,22 @@ class MemeView(View):
     template_name = "meme.html"
 
     def post(self, request: HttpRequest) -> HttpResponse:
-        file = request.POST.get("file")
         top_text = request.POST.get("top_text")
         bottom_text = request.POST.get("bottom_text")
         encoded_string = request.POST.get("encoded_string")
         is_share = request.POST.get("share") == "true"
+        upload_file = request.FILES.get("upload_file")
+        file_ext = request.POST.get("file_ext", "png")
+
         ctx = {
             "top_text": top_text,
             "bottom_text": bottom_text,
-            "file": file,
+            "file_ext": file_ext,
             "encoded_string": encoded_string,
         }
 
         if is_share:
-            file_name = f"{int(time.time())}.{file.split('.')[-1]}"
+            file_name = f"{int(time.time())}.{file_ext}"
             with open(get_file_path(file_name, "/shared/"), "wb+") as f:
                 f.write(base64.b64decode(encoded_string))
 
@@ -173,32 +170,33 @@ class MemeView(View):
                 name="new_picture",
             )
 
-        if file:
-            file_path = Path(get_file_path(file, "/img/"))
-            if not file_path.exists():
-                return render(request, self.template_name)
+        if not upload_file:
+            return render(request, self.template_name)
 
-            pil_img = Image.open(file_path)
-            wpercent = IMAGE_BASE_WIDTH / float(pil_img.size[0])
-            hsize = int(float(pil_img.size[1]) * wpercent)
-            pil_img = pil_img.resize(
-                (IMAGE_BASE_WIDTH, hsize), Image.Resampling.LANCZOS,
-            )
+        pil_img = Image.open(upload_file)
+        original_name = upload_file.name or "upload.png"
+        output_ext = original_name.rsplit(".", 1)[-1].lower()
 
-            renderer = MemeTextRenderer(
-                pil_img, get_file_path("impact.ttf", "/fonts/"),
-            )
-            if top_text:
-                renderer.draw_top_text(top_text)
-            if bottom_text:
-                renderer.draw_bottom_text(bottom_text)
+        wpercent = IMAGE_BASE_WIDTH / float(pil_img.size[0])
+        hsize = int(float(pil_img.size[1]) * wpercent)
+        pil_img = pil_img.resize(
+            (IMAGE_BASE_WIDTH, hsize), Image.Resampling.LANCZOS,
+        )
 
-            buffered = BytesIO()
-            pil_img.save(buffered, format=FORMAT_EXT.get(file.split(".")[-1]))
+        renderer = MemeTextRenderer(
+            pil_img, get_file_path("impact.ttf", "/fonts/"),
+        )
+        if top_text:
+            renderer.draw_top_text(top_text)
+        if bottom_text:
+            renderer.draw_bottom_text(bottom_text)
 
-            encoded_string = base64.b64encode(buffered.getvalue())
-            ctx["encoded_string"] = encoded_string.decode("utf-8")
+        save_format = FORMAT_EXT.get(output_ext, "png")
+        buffered = BytesIO()
+        pil_img.save(buffered, format=save_format)
 
-            return render(request, self.template_name, context=ctx)
+        encoded_string = base64.b64encode(buffered.getvalue())
+        ctx["encoded_string"] = encoded_string.decode("utf-8")
+        ctx["file_ext"] = output_ext
 
-        return render(request, self.template_name)
+        return render(request, self.template_name, context=ctx)
